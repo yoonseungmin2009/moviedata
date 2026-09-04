@@ -247,32 +247,79 @@ st.text_area("7번 그래프 해석을 적어보세요.", key="insight7_sunburst
 st.divider()
 
 # =========================================================
-# 그래프 8: 개봉일 스크린수 분포 - 히스토그램
+# 그래프 8: 국가별 총 관객수 분포 - 박스플롯
 # =========================================================
-st.header("8. 개봉일 스크린수 분포")
+st.header("8. 제작 국가별 총 관객수 분포")
 
-fig8_hist = px.histogram(
+# 영화 편수가 너무 적은 국가는 비교 의미가 적으므로, 편수 기준으로 정렬
+nation_order = df["nation"].value_counts().index.tolist()
+
+fig8_nation_box = px.box(
+    df,
+    x="nation",
+    y="total_audi",
+    points="outliers",       # 상자 밖 이상치만 점으로 표시
+    hover_data=["movieNm"],  # 이상치에 마우스를 올리면 영화명이 보이도록 설정
+    category_orders={"nation": nation_order},  # 편수가 많은 국가 순으로 정렬
+    labels={"nation": "제작 국가", "total_audi": "총 관객수"},
+    title="제작 국가별 총 관객수 박스플롯"
+)
+fig8_nation_box.update_layout(xaxis_tickangle=-45)
+
+st.plotly_chart(fig8_nation_box, use_container_width=True)
+
+# ---- 자동 계산: 국가별 평균 총 관객수 비교 ----
+nation_avg_audi = (
+    df.groupby("nation")["total_audi"]
+    .agg(["mean", "count"])
+    .rename(columns={"mean": "평균 총 관객수", "count": "편수"})
+    .sort_values("평균 총 관객수", ascending=False)
+)
+
+top_nation = nation_avg_audi.index[0]
+top_nation_avg = nation_avg_audi.iloc[0]["평균 총 관객수"]
+top_nation_count = int(nation_avg_audi.iloc[0]["편수"])
+
+st.markdown(f"""
+- 🌍 **평균 총 관객수가 가장 높은 국가:** **{top_nation}** (평균 `{top_nation_avg:,.0f}명`, 총 `{top_nation_count}편`)
+- ℹ️ 편수가 적은 국가는 평균값이 한두 편의 흥행 성적에 크게 좌우될 수 있으니, 편수도 함께 확인해 보세요.
+""")
+
+with st.expander("국가별 평균 총 관객수·편수 표로 보기"):
+    st.dataframe(nation_avg_audi.style.format({"평균 총 관객수": "{:,.0f}"}))
+
+st.markdown("**이 그래프로 알 수 있는 것:** ")
+st.text_area("8번 그래프 해석을 적어보세요.", key="insight8_nation_box", height=80)
+
+st.divider()
+
+# =========================================================
+# 그래프 9: 개봉일 스크린수 분포 - 히스토그램
+# =========================================================
+st.header("9. 개봉일 스크린수 분포")
+
+fig9_hist = px.histogram(
     df,
     x="first_scrn",
     nbins=30,
     labels={"first_scrn": "개봉일 스크린수"},
     title="개봉일 스크린수 분포"
 )
-fig8_hist.update_layout(yaxis_title="영화 편수")
+fig9_hist.update_layout(yaxis_title="영화 편수")
 
-st.plotly_chart(fig8_hist, use_container_width=True)
+st.plotly_chart(fig9_hist, use_container_width=True)
 
 st.markdown("**이 그래프로 알 수 있는 것:** ")
-st.text_area("8번 그래프 해석을 적어보세요.", key="insight8_hist", height=80)
+st.text_area("9번 그래프 해석을 적어보세요.", key="insight9_hist", height=80)
 
 st.divider()
 
 # =========================================================
-# 그래프 9: 10위권 유지 일수와 총 관객수의 관계 - 산점도 (버블 크기 활용)
+# 그래프 10: 10위권 유지 일수와 총 관객수의 관계 - 산점도 (버블 크기 활용)
 # =========================================================
-st.header("9. 10위권 유지 일수와 총 관객수의 관계")
+st.header("10. 10위권 유지 일수와 총 관객수의 관계")
 
-fig9 = px.scatter(
+fig10 = px.scatter(
     df,
     x="days_in_top10",
     y="total_audi",
@@ -288,10 +335,10 @@ fig9 = px.scatter(
     title="10위권 유지 일수 vs 총 관객수 (버블 크기: 개봉일 상영횟수)"
 )
 
-st.plotly_chart(fig9, use_container_width=True)
+st.plotly_chart(fig10, use_container_width=True)
 
 st.markdown("**이 그래프로 알 수 있는 것:** ")
-st.text_area("9번 그래프 해석을 적어보세요.", key="insight9", height=80)
+st.text_area("10번 그래프 해석을 적어보세요.", key="insight10", height=80)
 
 st.divider()
 
